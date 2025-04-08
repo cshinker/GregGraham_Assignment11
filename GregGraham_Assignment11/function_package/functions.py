@@ -13,6 +13,8 @@
 # Anything else that's relevant:
 
 import csv
+import os
+
 
 class csv_Functions():
     def read_csv(self, file_path):
@@ -74,3 +76,84 @@ class csv_Functions():
                 # or if the header somehow disappeared
                 pass  # Keep the original value if formatting fails
         return data
+
+    def remove_duplicates(self, data):
+        """
+        Removes duplicate rows from a list of dictionaries while ignoring the first column.
+        It checks for duplicates based on all columns except the first one.
+
+        Args:
+            data (list): A list of dictionaries, where each dictionary represents a
+                         row from a CSV file.
+
+        Returns:
+            list: A new list of dictionaries with duplicate rows removed, ignoring the first column.
+        """
+        if not data:
+            return []
+
+        # Get the column headers
+        headers = list(data[0].keys())
+
+        # Create a set to track the seen rows (ignoring the first column)
+        seen = set()
+        unique_data = []
+
+        # Loop through each row
+        for row in data:
+            # Create a tuple of the row excluding the first column (the first column's key)
+            row_values_excluding_first_column = tuple((key, value) for key, value in row.items() if key != headers[0])
+
+            # If this row (ignoring the first column) hasn't been seen yet, add it to unique_data
+            if row_values_excluding_first_column not in seen:
+                unique_data.append(row)
+                seen.add(row_values_excluding_first_column)
+
+        return unique_data
+
+    def remove_pepsi(self, data, phrase="Pepsi"):
+        """
+        Deletes the fuel type if the value in the 6th column corresponds to "Pepsi" and writes those rows to 'dataAnomalies.csv'.
+
+        Args:
+            data (list): A list of dictionaries, where each dictionary represents a row.
+            phrase (str): The phrase to search for (default is "Pepsi").
+
+        Returns:
+            list: The updated list of dictionaries where fuel type is removed if it contains "Pepsi".
+        """
+        if not data:
+            return []
+
+        # Create 'Data' folder if it doesn't exist
+        os.makedirs('Data', exist_ok=True)
+
+        # Prepare the data for anomalies and valid rows
+        anomaly_data = []
+        valid_data = []
+
+        # Get the headers (column names)
+        headers = list(data[0].keys())
+
+        # Loop through each row and check for the anomaly
+        for row in data:
+            if len(headers) >= 6:  # Ensure there are at least 6 columns
+                # Get the value of the 6th column (index 5)
+                if phrase in row[headers[5]]:  # Check if 'Pepsi' is in the 6th column
+                    # Save this row as an anomaly
+                    anomaly_data.append(row)
+                    # Remove the 6th column from the row (fuel type)
+                    del row[headers[5]]
+            valid_data.append(row)
+
+        # Write anomalies to a new CSV file (dataAnomalies.csv)
+        if anomaly_data:
+            with open('Data/dataAnomalies.csv', 'w', newline='', encoding='utf-8') as anomaly_file:
+                writer = csv.DictWriter(anomaly_file, fieldnames=headers)
+                writer.writeheader()
+                writer.writerows(anomaly_data)
+        else:
+            print("No anomalies found to write.")
+
+        # Return the cleaned data
+        return valid_data
