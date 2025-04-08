@@ -12,6 +12,9 @@
 
 # Anything else that's relevant:
 
-
+from function_package.functions import *
 if __name__ == "__main__":
-    pass
+    csv = csv_Functions()
+    data_list = csv.read_csv("Data/fuelPurchaseData.csv")
+    rounded_data = csv.round_price(data_list)
+    
