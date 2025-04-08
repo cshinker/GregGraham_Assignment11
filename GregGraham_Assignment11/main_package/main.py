@@ -17,4 +17,8 @@ if __name__ == "__main__":
     csv = csv_Functions()
     data_list = csv.read_csv("Data/fuelPurchaseData.csv")
     rounded_data = csv.round_price(data_list)
+
+    duplicate_data = csv.remove_duplicates(rounded_data)
+
+    pepsi_removed = csv.remove_pepsi(duplicate_data)
     
