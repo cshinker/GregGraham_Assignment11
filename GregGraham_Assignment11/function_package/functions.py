@@ -14,6 +14,8 @@
 
 import csv
 import os
+import requests
+import re
 
 
 class csv_Functions():
@@ -232,3 +234,76 @@ class csv_Functions():
         else:
             print("No rows found with matching values in columns 5 and 9 across multiple rows.")
             return False
+
+
+
+    def fill_zip_codes(self, data, api_key):
+        """
+        Appends ZIP codes to full addresses (in the 4th column) for the first 5 rows 
+        that are missing ZIP codes. Uses city/state via the Zipcodebase API and 
+        writes the full cleaned dataset to Data/cleanedData.csv.
+
+        Args:
+            data (list): List of dictionaries representing rows.
+            api_key (str): Zipcodebase API key.
+
+        Returns:
+            list: Updated data with ZIPs added to the first 5 missing.
+        """
+        if not data:
+            return []
+
+        headers = list(data[0].keys())
+        if len(headers) < 4:
+            return data
+
+        address_col = headers[3]
+        zip_cache = {}
+        filled_count = 0
+        max_to_fill = 5
+
+        for row in data:
+            if filled_count >= max_to_fill:
+                break
+
+            full_address = row.get(address_col, '').strip()
+
+            # Skip if ZIP is already present
+            if re.search(r'\b\d{5}(?:-\d{4})?\b', full_address):
+                continue
+
+            parts = full_address.split(',')
+            if len(parts) >= 2:
+                city = parts[-2].strip()
+                state = parts[-1].strip()[:2].upper()
+
+                if city and state:
+                    key = f"{city},{state}"
+                    if key in zip_cache:
+                        zip_code = zip_cache[key]
+                        row[address_col] = f"{full_address} {zip_code}"
+                        filled_count += 1
+                        continue
+
+                    try:
+                        url = f"https://app.zipcodebase.com/api/v1/code/city?city={city}&state={state}"
+                        response = requests.get(url, headers={"apikey": api_key})
+                        if response.status_code == 200:
+                            result = response.json()
+                            zip_codes = result.get("results", {}).get(key, [])
+                            if zip_codes:
+                                zip_code = zip_codes[0]
+                                zip_cache[key] = zip_code
+                                row[address_col] = f"{full_address} {zip_code}"
+                                filled_count += 1
+                    except Exception:
+                        pass
+
+        # Save the result to 'Data/cleanedData.csv'
+        os.makedirs('Data', exist_ok=True)
+        with open('Data/cleanedData.csv', 'w', newline='', encoding='utf-8') as output_file:
+            writer = csv.DictWriter(output_file, fieldnames=headers)
+            writer.writeheader()
+            writer.writerows(data)
+
+        return data
