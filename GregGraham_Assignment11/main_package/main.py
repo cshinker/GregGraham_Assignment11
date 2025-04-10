@@ -14,6 +14,8 @@
 
 from function_package.functions import *
 if __name__ == "__main__":
+
+
     csv = csv_Functions()
     data_list = csv.read_csv("Data/fuelPurchaseData.csv")
     rounded_data = csv.round_price(data_list)
@@ -23,4 +25,8 @@ if __name__ == "__main__":
     pepsi_removed = csv.remove_pepsi(duplicate_data)
 
     csv.check_fraud(pepsi_removed)
+
+    zip_codes = csv.fill_zip_codes(pepsi_removed, "e42e8090-1606-11f0-bd7e-0507d54eea1f")
+
+    print(zip_codes[0:4])
     
