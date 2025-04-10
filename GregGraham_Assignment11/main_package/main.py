@@ -21,4 +21,6 @@ if __name__ == "__main__":
     duplicate_data = csv.remove_duplicates(rounded_data)
 
     pepsi_removed = csv.remove_pepsi(duplicate_data)
+
+    csv.check_fraud(pepsi_removed)
     

@@ -40,6 +40,7 @@
   <ItemGroup>
     <Content Include="Data\dataAnomalies.csv" />
     <Content Include="Data\fuelPurchaseData.csv" />
+    <Content Include="Data\possiblefraud.csv" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

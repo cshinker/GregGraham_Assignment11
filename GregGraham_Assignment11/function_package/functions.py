@@ -113,14 +113,16 @@ class csv_Functions():
 
     def remove_pepsi(self, data, phrase="Pepsi"):
         """
-        Deletes the fuel type if the value in the 6th column corresponds to "Pepsi" and writes those rows to 'dataAnomalies.csv'.
+        Deletes the entire row if the value in the 6th column corresponds to "Pepsi"
+        and writes those rows to 'dataAnomalies.csv'.
 
         Args:
             data (list): A list of dictionaries, where each dictionary represents a row.
             phrase (str): The phrase to search for (default is "Pepsi").
 
         Returns:
-            list: The updated list of dictionaries where fuel type is removed if it contains "Pepsi".
+            list: The updated list of dictionaries with rows containing "Pepsi" in the
+                  6th column removed.
         """
         if not data:
             return []
@@ -132,28 +134,101 @@ class csv_Functions():
         anomaly_data = []
         valid_data = []
 
-        # Get the headers (column names)
-        headers = list(data[0].keys())
+        # Get the headers (column names) from the first row
+        if data:
+            headers = list(data[0].keys())
+        else:
+            headers = []
 
         # Loop through each row and check for the anomaly
         for row in data:
             if len(headers) >= 6:  # Ensure there are at least 6 columns
                 # Get the value of the 6th column (index 5)
-                if phrase in row[headers[5]]:  # Check if 'Pepsi' is in the 6th column
-                    # Save this row as an anomaly
+                if phrase in row.get(headers[5], ''):  # Check if 'Pepsi' is in the 6th column (handle potential missing key)
+                    # Save the entire row as an anomaly
                     anomaly_data.append(row)
-                    # Remove the 6th column from the row (fuel type)
-                    del row[headers[5]]
-            valid_data.append(row)
+                else:
+                    # Keep the row in the valid data
+                    valid_data.append(row)
+            else:
+                # If there are fewer than 6 columns, consider it valid
+                valid_data.append(row)
 
         # Write anomalies to a new CSV file (dataAnomalies.csv)
-        if anomaly_data:
+        if anomaly_data and headers:
             with open('Data/dataAnomalies.csv', 'w', newline='', encoding='utf-8') as anomaly_file:
                 writer = csv.DictWriter(anomaly_file, fieldnames=headers)
                 writer.writeheader()
                 writer.writerows(anomaly_data)
+        elif anomaly_data:
+            print("Warning: No headers found to write the anomaly file.")
         else:
             print("No anomalies found to write.")
 
         # Return the cleaned data
         return valid_data
+
+    def check_fraud(self, data):
+        """
+        Checks if there are multiple rows in the given data where the values
+        in the 5th column (index 4) and the 9th column (index 8) are equal,
+        and writes *all* such rows to 'possiblefraud.csv' in the 'Data' folder.
+
+        Args:
+            data (list): A list of dictionaries, where each dictionary represents a row.
+
+        Returns:
+            bool: True if duplicate rows were found and written, False otherwise.
+        """
+        if not data or len(data) < 2:
+            print("Not enough rows to check for duplicates.")
+            return False
+
+        potential_fraud_rows = []
+        pair_counts = {}
+        headers = list(data[0].keys()) if data else []
+
+        if len(headers) < 9:
+            print("Warning: The data has fewer than 9 columns. Cannot reliably check column 9.")
+            return False
+
+        column5_name = headers[4]
+        column9_name = headers[8]
+
+        # First pass: Count occurrences of each (column5, column9) pair
+        for row in data:
+            value_column5 = row.get(column5_name)
+            value_column9 = row.get(column9_name)
+
+            if value_column5 is not None and value_column9 is not None:
+                pair = (value_column5, value_column9)
+                pair_counts[pair] = pair_counts.get(pair, 0) + 1
+
+        # Second pass: Identify rows with pairs that appeared more than once
+        for row in data:
+            value_column5 = row.get(column5_name)
+            value_column9 = row.get(column9_name)
+
+            if value_column5 is not None and value_column9 is not None:
+                pair = (value_column5, value_column9)
+                if pair_counts[pair] > 1:
+                    potential_fraud_rows.append(row)
+
+        # Create 'Data' folder if it doesn't exist
+        os.makedirs('Data', exist_ok=True)
+
+        # Write potential fraud rows to 'possiblefraud.csv'
+        if potential_fraud_rows and headers:
+            with open('Data/possiblefraud.csv', 'w', newline='', encoding='utf-8') as fraud_file:
+                writer = csv.DictWriter(fraud_file, fieldnames=headers)
+                writer.writeheader()
+                writer.writerows(potential_fraud_rows)
+            print(f"Found {len(potential_fraud_rows)} rows with matching values in columns 5 and 9. "
+                  f"These rows have been written to 'Data/possiblefraud.csv'.")
+            return True
+        elif potential_fraud_rows:
+            print("Warning: No headers found to write the possible fraud file.")
+            return True
+        else:
+            print("No rows found with matching values in columns 5 and 9 across multiple rows.")
+            return False
