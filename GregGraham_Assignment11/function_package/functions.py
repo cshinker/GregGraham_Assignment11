@@ -252,7 +252,7 @@ class csv_Functions():
         """
         if not data:
             return []
-
+        # Comment out
         headers = list(data[0].keys())
         if len(headers) < 4:
             return data
@@ -286,8 +286,9 @@ class csv_Functions():
                         continue
 
                     try:
-                        url = f"https://app.zipcodebase.com/api/v1/code/city?city={city}&state={state}"
-                        response = requests.get(url, headers={"apikey": api_key})
+                        #url = f"https://app.zipcodebase.com/api/v1/code/city?city={city}&state={state}"
+                        url = "https://app.zipcodebase.com/api/v1/code/city?apikey="+api_key+"&city="+city+"&country=us"
+                        response = requests.get(url)
                         if response.status_code == 200:
                             result = response.json()
                             zip_codes = result.get("results", {}).get(key, [])
@@ -298,7 +299,7 @@ class csv_Functions():
                                 filled_count += 1
                     except Exception:
                         pass
-
+        # Comment out
         # Save the result to 'Data/cleanedData.csv'
         os.makedirs('Data', exist_ok=True)
         with open('Data/cleanedData.csv', 'w', newline='', encoding='utf-8') as output_file:
