@@ -38,6 +38,7 @@
     <Folder Include="Data\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Data\cleanedData.csv" />
     <Content Include="Data\dataAnomalies.csv" />
     <Content Include="Data\fuelPurchaseData.csv" />
     <Content Include="Data\possiblefraud.csv" />

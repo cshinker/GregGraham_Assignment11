@@ -291,7 +291,8 @@ class csv_Functions():
                         response = requests.get(url)
                         if response.status_code == 200:
                             result = response.json()
-                            zip_codes = result.get("results", {}).get(key, [])
+                            zip_codes = result["results"]
+
                             if zip_codes:
                                 zip_code = zip_codes[0]
                                 zip_cache[key] = zip_code
